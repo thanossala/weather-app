@@ -3,152 +3,191 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather App</title>
+  <title>Premium Weather Dashboard</title>
   <style>
     :root {
-      --bg: #f5f5f3;
-      --surface: #ffffff;
-      --surface2: #f0efed;
-      --border: rgba(0,0,0,0.1);
-      --border-hover: rgba(0,0,0,0.25);
-      --text: #1a1a1a;
-      --muted: #6b6b6b;
-      --radius-md: 8px;
-      --radius-lg: 12px;
+      /* Day Theme (Defaults) */
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 100%);
+      --surface: rgba(255, 255, 255, 0.8);
+      --surface-card: #ffffff;
+      --border: rgba(15, 23, 42, 0.08);
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #0284c7;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+    }
+
+    [data-theme="night"] {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --surface: rgba(30, 41, 59, 0.7);
+      --surface-card: #1e293b;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: var(--bg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-gradient);
       color: var(--text);
       min-height: 100vh;
-      padding: 2rem 1rem;
+      padding: 3rem 1rem;
+      transition: background 0.5s ease;
     }
 
-    .app { max-width: 520px; margin: 0 auto; }
+    .app { max-width: 540px; margin: 0 auto; }
 
-    .header { margin-bottom: 1.5rem; }
-    .header h1 { font-size: 22px; font-weight: 500; }
-    .header p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    /* Header styling */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+    .header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-    .search-row { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    /* Search & Location Bar combo */
+    .search-row { display: flex; gap: 8px; margin-bottom: 1.5rem; }
     .search-row input {
       flex: 1;
-      padding: 10px 14px;
-      border: 0.5px solid var(--border-hover);
+      padding: 12px 16px;
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      font-size: 14px;
-      background: var(--surface);
+      font-size: 15px;
+      background: var(--surface-card);
       color: var(--text);
-      font-family: inherit;
       outline: none;
-      transition: border-color 0.15s;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
     }
-    .search-row input:focus { border-color: var(--text); }
-    .search-btn {
-      background: var(--text);
-      color: #fff;
+    .search-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
+    
+    .btn {
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 600;
       border: none;
       border-radius: var(--radius-md);
-      padding: 0 18px;
-      font-size: 14px;
-      font-weight: 500;
       cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .search-btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--text); color: var(--bg-gradient); }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-geo { background: var(--surface-card); border: 1px solid var(--border); color: var(--text); padding: 0 14px; }
+    .btn-geo:hover { background: var(--border); }
 
+    /* Error alerts */
     .error {
       font-size: 13px;
-      color: #A32D2D;
-      margin-bottom: 1rem;
-      padding: 10px 14px;
-      background: #FCEBEB;
+      font-weight: 500;
+      color: #b91c1c;
+      margin-bottom: 1.25rem;
+      padding: 12px 16px;
+      background: #fee2e2;
+      border: 1px solid rgba(185, 28, 28, 0.15);
       border-radius: var(--radius-md);
       display: none;
     }
 
+    /* Main Weather Presentation Card */
     .main-card {
       background: var(--surface);
-      border: 0.5px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
+      padding: 2rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow);
     }
-    .city-name { font-size: 24px; font-weight: 500; }
-    .country { font-size: 13px; color: var(--muted); margin-bottom: 1rem; }
-    .temp-row { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 6px; }
-    .temp-big { font-size: 60px; font-weight: 500; line-height: 1; }
-    .temp-unit { font-size: 22px; color: var(--muted); margin-bottom: 10px; }
-    .weather-icon { font-size: 52px; line-height: 1; margin-bottom: 0; }
-    .feels { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-    .desc { font-size: 15px; text-transform: capitalize; }
+    .city-name { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+    .country { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .temp-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .temp-left { display: flex; align-items: flex-start; }
+    .temp-big { font-size: 72px; font-weight: 800; line-height: 0.9; letter-spacing: -0.04em; }
+    .temp-unit { font-size: 26px; color: var(--muted); font-weight: 500; margin-top: 4px; margin-left: 2px; }
+    .weather-icon { font-size: 64px; line-height: 1; }
+    
+    .feels { font-size: 14px; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+    .desc { font-size: 16px; font-weight: 600; text-transform: capitalize; }
 
+    /* Conditions Grid Layout */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 8px;
-      margin-bottom: 1rem;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 1.25rem;
     }
     .stat-box {
       background: var(--surface);
-      border: 0.5px solid var(--border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      padding: 10px 12px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: var(--shadow);
     }
-    .stat-lbl { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .stat-val { font-size: 16px; font-weight: 500; }
+    .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
+    .stat-val { font-size: 15px; font-weight: 700; }
 
+    /* Extended 5-Day Card View */
     .forecast-card {
       background: var(--surface);
-      border: 0.5px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
     }
-    .forecast-title { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-    .forecast-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0,1fr));
-      gap: 6px;
-    }
+    .forecast-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+    .forecast-grid { display: flex; flex-direction: column; gap: 8px; }
+    
     .forecast-item {
-      border: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.03);
       border-radius: var(--radius-md);
-      padding: 10px 6px;
-      text-align: center;
+      border: 1px solid transparent;
     }
-    .fc-day { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .fc-icon { font-size: 22px; margin-bottom: 4px; }
-    .fc-temp { font-size: 14px; font-weight: 500; }
-    .fc-min { font-size: 11px; color: var(--muted); }
+    .fc-day { font-size: 14px; font-weight: 600; min-width: 90px; }
+    .fc-icon { font-size: 24px; display: flex; align-items: center; }
+    .fc-temps { font-size: 14px; font-weight: 600; display: flex; gap: 12px; justify-content: flex-end; min-width: 70px; }
+    .fc-min { color: var(--muted); font-weight: 400; }
 
+    /* Status placeholders */
     .placeholder {
       background: var(--surface);
-      border: 0.5px solid var(--border);
+      border: 1px dashed var(--border);
       border-radius: var(--radius-lg);
-      padding: 3rem 2rem;
+      padding: 4rem 2rem;
       text-align: center;
       color: var(--muted);
-      font-size: 14px;
     }
-    .placeholder .icon { font-size: 40px; margin-bottom: 12px; }
-    .placeholder p { margin-top: 6px; font-size: 12px; }
+    .placeholder .icon { font-size: 48px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
+    .placeholder h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .placeholder p { font-size: 13px; }
 
-    .loading {
-      text-align: center;
-      padding: 3rem;
-      color: var(--muted);
-      font-size: 14px;
+    .loading { text-align: center; padding: 4rem; color: var(--muted); font-size: 15px; font-weight: 500; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
     }
 
     @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .forecast-grid { grid-template-columns: repeat(5, minmax(0,1fr)); }
-      .temp-big { font-size: 48px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .main-card { padding: 1.5rem; }
+      .temp-big { font-size: 56px; }
+      .header { flex-direction: column; gap: 10px; }
     }
   </style>
 </head>
@@ -156,13 +195,16 @@
 
 <div class="app">
   <div class="header">
-    <h1>Weather App</h1>
-    <p>Πραγματικός καιρός από το OpenWeatherMap API</p>
+    <div>
+      <h1>Weather App</h1>
+      <p>Σύγχρονη πρόγνωση καιρού σε πραγματικό χρόνο</p>
+    </div>
   </div>
 
   <div class="search-row">
-    <input type="text" id="inp-city" placeholder="Αναζήτησε πόλη (π.χ. Athens, London)..." />
-    <button class="search-btn" onclick="search()">Αναζήτηση</button>
+    <button class="btn btn-geo" onclick="getLiveLocation()" title="Χρήση τρέχουσας τοποθεσίας">📍</button>
+    <input type="text" id="inp-city" placeholder="Αναζήτηση πόλης (π.χ. Athens, London)..." autocomplete="off" />
+    <button class="btn btn-primary" onclick="searchCity()">Αναζήτηση</button>
   </div>
 
   <div class="error" id="error-msg"></div>
@@ -170,14 +212,14 @@
   <div id="content">
     <div class="placeholder">
       <div class="icon">⛅</div>
-      <div>Αναζήτησε μια πόλη για να δεις τον καιρό</div>
-      <p>Δεδομένα σε πραγματικό χρόνο από το OpenWeatherMap</p>
+      <h3>Καλώς ήλθατε</h3>
+      <p>Επιλέξτε τοποθεσία ή πληκτρολογήστε μια πόλη για λήψη δεδομένων.</p>
     </div>
   </div>
 </div>
 
 <script>
-  
+  // OpenWeatherMap System Global Settings
   const API_KEY = '4171f0661697affe6ba55371ce641b81';
 
   const ICONS = {
@@ -188,15 +230,25 @@
     '50d':'🌫️','50n':'🌫️'
   };
 
-  const DAYS = ['Κυρ','Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ'];
+  const DAYS = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+
+  // Establish active interface theme depending on current client hour
+  function initDynamicTheme() {
+    const hour = new Date().getHours();
+    if (hour < 6 || hour > 19) {
+      document.documentElement.setAttribute('data-theme', 'night');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
 
   document.getElementById('inp-city').addEventListener('keydown', e => {
-    if (e.key === 'Enter') search();
+    if (e.key === 'Enter') searchCity();
   });
 
   function showError(msg) {
     const el = document.getElementById('error-msg');
-    el.textContent = msg;
+    el.innerHTML = cleanHTML(msg);
     el.style.display = 'block';
   }
 
@@ -204,61 +256,136 @@
     document.getElementById('error-msg').style.display = 'none';
   }
 
-  // async function = function που χρησιμοποιεί await
-  async function search() {
+  function cleanHTML(str) {
+    if (!str) return '';
+    return str.toString()
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+  }
+
+  // Request browser geolocation coordinates
+  function getLiveLocation() {
+    hideError();
+    if (!navigator.geolocation) {
+      showError('Η γεωγραφική τοποθεσία δεν υποστηρίζεται από τον περιηγητή σας.');
+      return;
+    }
+    
+    document.getElementById('content').innerHTML = '<div class="loading">Εντοπισμός τοποθεσίας...</div>';
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        fetchWeatherByCoords(lat, lon);
+      },
+      (error) => {
+        showError('Αδυναμία πρόσβασης στην τοποθεσία σας. Πληκτρολογήστε την πόλη χειροκίνητα.');
+        document.getElementById('content').innerHTML = '';
+      }
+    );
+  }
+
+  async function searchCity() {
     const city = document.getElementById('inp-city').value.trim();
     if (!city) return;
     hideError();
 
-    document.getElementById('content').innerHTML = '<div class="loading">Φορτώνω...</div>';
+    document.getElementById('content').innerHTML = '<div class="loading">Αναζήτηση δεδομένων...</div>';
 
     try {
-      // fetch() = στέλνουμε αίτημα στο API
-      // await = περιμένουμε την απάντηση πριν συνεχίσουμε
-      const weatherRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=el`
-      );
-
-      if (!weatherRes.ok) {
-        showError('Η πόλη δεν βρέθηκε. Δοκίμασε στα αγγλικά (π.χ. Athens, Thessaloniki).');
-        document.getElementById('content').innerHTML = '';
-        return;
-      }
-
-      // .json() = μετατρέπουμε την απάντηση σε JavaScript object
-      const w = await weatherRes.json();
-
-      // Δεύτερο αίτημα για 5-ήμερη πρόβλεψη
-      const forecastRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=el`
-      );
-      const f = await forecastRes.json();
-
-      renderWeather(w, f);
-
+      const urlWeather = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=el`;
+      const urlForecast = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=el`;
+      
+      await executeParallelFetch(urlWeather, urlForecast);
     } catch (err) {
-      showError('Σφάλμα σύνδεσης. Έλεγξε ότι το API key είναι σωστό.');
-      document.getElementById('content').innerHTML = '';
+      handleFetchError();
     }
   }
 
+  async function fetchWeatherByCoords(lat, lon) {
+    try {
+      const urlWeather = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=el`;
+      const urlForecast = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=el`;
+      
+      await executeParallelFetch(urlWeather, urlForecast);
+    } catch (err) {
+      handleFetchError();
+    }
+  }
+
+  async function executeParallelFetch(urlWeather, urlForecast) {
+    const [resWeather, resForecast] = await Promise.all([
+      fetch(urlWeather),
+      fetch(urlForecast)
+    ]);
+
+    if (!resWeather.ok || !resForecast.ok) {
+      showError('Η πόλη δεν βρέθηκε. Παρακαλώ δοκιμάστε ξανά με λατινικούς χαρακτήρες (π.χ. Athens).');
+      document.getElementById('content').innerHTML = '';
+      return;
+    }
+
+    const weatherData = await resWeather.json();
+    const forecastData = await resForecast.json();
+
+    renderWeather(weatherData, forecastData);
+  }
+
+  function handleFetchError() {
+    showError('Παρουσιάστηκε σφάλμα δικτύου. Ελέγξτε τη σύνδεσή σας ή το κλειδί API.');
+    document.getElementById('content').innerHTML = '';
+  }
+
+  // Parses incoming dataset arrays and builds cleanly grouped elements
+  function processForecast(list) {
+    const daysMap = {};
+    const todayStr = new Date().toDateString();
+
+    list.forEach(item => {
+      const dateObj = new Date(item.dt * 1000);
+      const dateStr = dateObj.toDateString();
+
+      // Filter out structural fragments belonging to the current day
+      if (dateStr === todayStr) return;
+
+      if (!daysMap[dateStr]) {
+        daysMap[dateStr] = {
+          dayIndex: dateObj.getDay(),
+          temp_max: item.main.temp_max,
+          temp_min: item.main.temp_min,
+          icon: item.weather[0].icon
+        };
+      } else {
+        if (item.main.temp_max > daysMap[dateStr].temp_max) daysMap[dateStr].temp_max = item.main.temp_max;
+        if (item.main.temp_min < daysMap[dateStr].temp_min) daysMap[dateStr].temp_min = item.main.temp_min;
+      }
+    });
+
+    return Object.values(daysMap).slice(0, 5);
+  }
+
   function renderWeather(w, f) {
-    // Παίρνουμε 1 αποτέλεσμα ανά μέρα (κάθε 8 * 3h = 24h)
-    const daily = f.list.filter((_, i) => i % 8 === 0).slice(0, 5);
+    const uniqueForecast = processForecast(f.list);
     const icon = ICONS[w.weather[0].icon] || '🌡️';
-    const date = new Date().toLocaleDateString('el-GR', { weekday:'long', day:'numeric', month:'long' });
+    const dateFormatted = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     document.getElementById('content').innerHTML = `
       <div class="main-card">
-        <div class="city-name">${w.name}</div>
-        <div class="country">${w.sys.country} · ${date}</div>
+        <div class="city-name">${cleanHTML(w.name)}</div>
+        <div class="country">${cleanHTML(w.sys.country)} · ${dateFormatted}</div>
         <div class="temp-row">
-          <div class="temp-big">${Math.round(w.main.temp)}</div>
-          <div class="temp-unit">°C</div>
+          <div class="temp-left">
+            <div class="temp-big">${Math.round(w.main.temp)}</div>
+            <div class="temp-unit">°C</div>
+          </div>
           <div class="weather-icon">${icon}</div>
         </div>
         <div class="feels">Αίσθηση ${Math.round(w.main.feels_like)}°C</div>
-        <div class="desc">${w.weather[0].description}</div>
+        <div class="desc">${cleanHTML(w.weather[0].description)}</div>
       </div>
 
       <div class="stats-grid">
@@ -281,19 +408,24 @@
       </div>
 
       <div class="forecast-card">
-        <div class="forecast-title">5-ήμερη πρόβλεψη</div>
+        <div class="forecast-title">Πρόγνωση 5 Επόμενων Ημερών</div>
         <div class="forecast-grid">
-          ${daily.map(d => `
+          ${uniqueForecast.map(d => `
             <div class="forecast-item">
-              <div class="fc-day">${DAYS[new Date(d.dt * 1000).getDay()]}</div>
-              <div class="fc-icon">${ICONS[d.weather[0].icon] || '🌡️'}</div>
-              <div class="fc-temp">${Math.round(d.main.temp_max)}°</div>
-              <div class="fc-min">${Math.round(d.main.temp_min)}°</div>
+              <div class="fc-day">${DAYS[d.dayIndex]}</div>
+              <div class="fc-icon">${ICONS[d.icon] || '🌡️'}</div>
+              <div class="fc-temps">
+                <span>${Math.round(d.temp_max)}°</span>
+                <span class="fc-min">${Math.round(d.temp_min)}°</span>
+              </div>
             </div>`).join('')}
         </div>
       </div>
     `;
   }
+
+  // Self running environment layout check
+  initDynamicTheme();
 </script>
 
 </body>
