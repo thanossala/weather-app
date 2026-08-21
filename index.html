@@ -199,6 +199,11 @@ body{
 
 <script>
 const API_KEY = "4171f0661697affe6ba55371ce641b81";
+// NOTE: This is a purely client-side app, so the API key is necessarily visible
+// in the page source and inside every outgoing request. For a portfolio/demo
+// project this is a common and accepted tradeoff, but for anything handling a
+// key with real usage limits or billing, proxy requests through a small
+// backend instead so the key never reaches the browser.
 
 const ICONS={
 '01d':'☀️','01n':'🌙','02d':'⛅','02n':'☁️',
@@ -232,9 +237,10 @@ function setLoading(msg){
 
 function initDynamicTheme(){
  const h=new Date().getHours();
- document.documentElement.toggleAttribute("data-theme",h<6||h>19);
  if(h<6||h>19){
    document.documentElement.setAttribute("data-theme","night");
+ }else{
+   document.documentElement.removeAttribute("data-theme");
  }
 }
 
@@ -266,18 +272,38 @@ async function searchCity(){
 
 function getLiveLocation(){
  hideError();
+
+ // Guard: navigator.geolocation is undefined on browsers/contexts that
+ // don't support it (older browsers, some non-HTTPS origins). Calling
+ // getCurrentPosition() on undefined used to throw an uncaught TypeError
+ // here, leaving the page stuck on "Εντοπισμός τοποθεσίας..." forever
+ // since this function also runs automatically on page load.
+ if(!navigator.geolocation){
+   showError("Ο browser δεν υποστηρίζει geolocation.");
+   renderPlaceholder();
+   return;
+ }
+
+ const geoBtn=document.querySelector(".btn-geo");
+ if(geoBtn) geoBtn.disabled=true;
+
  setLoading("Εντοπισμός τοποθεσίας...");
 
  navigator.geolocation.getCurrentPosition(
  async pos=>{
    const {latitude,longitude}=pos.coords;
 
-   await fetchWeather(
-    `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=el`,
-    `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=el`
-   );
+   try{
+     await fetchWeather(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=el`,
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric&lang=el`
+     );
+   }finally{
+     if(geoBtn) geoBtn.disabled=false;
+   }
  },
  ()=>{
+   if(geoBtn) geoBtn.disabled=false;
    showError("Δεν ήταν δυνατή η πρόσβαση στην τοποθεσία.");
    renderPlaceholder();
  },
@@ -369,7 +395,7 @@ function renderWeather(w,f){
  </div>
 
  <div class="forecast-card">
-   <div class="forecast-title">Πρόγνωση 5 Ημερών</div>
+   <div class="forecast-title">Πρόγνωση ${forecast.length} Ημερών</div>
    ${forecast.map(d=>`
    <div class="forecast-item">
       <div>${DAYS[d.dayIndex]}</div>
